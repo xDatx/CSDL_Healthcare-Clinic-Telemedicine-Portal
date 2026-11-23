@@ -30,7 +30,7 @@ The biggest piece is case-based access control on medical records - a doctor can
 - [x] Relationship definitions
 - [x] Relational schema mapping (Elmasri Steps 1-9)
 - [x] Normalization (3NF/BCNF proof)
-- [ ] EER diagram redraw + Crow's Foot physical diagram (Appendix A)
+- [x] EER diagram redraw + Crow's Foot physical diagram (Appendix A)
 - [ ] DDL + mock data
 - [ ] Queries, triggers, views
 - [ ] Backend integration + demo
