@@ -17,4 +17,3 @@ CREATE TABLE appointment (
     CONSTRAINT fk_appt_shift   FOREIGN KEY (shift_id)   REFERENCES shift (shift_id)
 );
 
-CREATE INDEX idx_appt_shift_time ON appointment (shift_id, start_time);
