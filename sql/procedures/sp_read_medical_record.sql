@@ -1,18 +1,26 @@
+-- Author: Lý Thành Đạt
+-- Module: Secure read of medical record with audit (NFR-02, NFR-04)
 USE healthcare;
 
--- Q07: part-time doctors ranked by hours & pay
-SELECT d.doctor_id, d.full_name,
-       COUNT(s.shift_id) AS shift_count,
-       SUM(TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)) / 60 AS total_hours,
-       SUM(TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time)) / 60 * s.rate_per_hour AS total_pay
-FROM doctor d
-JOIN shift s ON s.doctor_id = d.doctor_id AND s.status = 'ACTIVE'
-WHERE d.employment_type = 'PART_TIME'
-GROUP BY d.doctor_id, d.full_name, s.rate_per_hour
-ORDER BY total_hours DESC;
+DROP PROCEDURE IF EXISTS sp_read_medical_record;
+DELIMITER $$
 
--- Q08: doctors with zero shifts
-SELECT d.doctor_id, d.full_name, d.spec_type, d.created_at
-FROM doctor d
-WHERE NOT EXISTS (SELECT 1 FROM shift s WHERE s.doctor_id = d.doctor_id)
-ORDER BY d.created_at DESC;
+CREATE PROCEDURE sp_read_medical_record(
+    IN p_record_id  INT,
+    IN p_actor_type VARCHAR(10),
+    IN p_actor_id   INT
+)
+BEGIN
+    -- 1. Audit the read
+    INSERT INTO medical_record_audit_log (record_id, actor_type, actor_id, action)
+    VALUES (p_record_id, p_actor_type, p_actor_id, 'SELECT');
+
+    -- 2. Return the record
+    SELECT mr.record_id, mr.appointment_id, mr.diagnosis, mr.symptoms,
+           mr.systolic_bp, mr.diastolic_bp, mr.heart_rate,
+           mr.temperature_c, mr.oxygen_saturation, mr.notes, mr.created_at
+    FROM medical_record mr
+    WHERE mr.record_id = p_record_id;
+END$$
+
+DELIMITER ;
