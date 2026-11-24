@@ -15,5 +15,3 @@ CREATE TABLE shift (
     CONSTRAINT fk_shift_doctor FOREIGN KEY (doctor_id) REFERENCES doctor (doctor_id),
     CONSTRAINT fk_shift_room   FOREIGN KEY (room_id)   REFERENCES room (room_id)
 );
-
-CREATE INDEX idx_shift_doctor_date ON shift (doctor_id, shift_date);
