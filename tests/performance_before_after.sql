@@ -1,66 +1,61 @@
 -- Author: Lý Thành Đạt
--- Module: Before/after index comparison for NFR-03
--- Kỹ thuật: dùng IGNORE INDEX thay vì DROP INDEX
---           (vì idx_appt_patient_date đang là index FK không thể drop)
--- MySQL 8.0.18+ required
-
+-- Module: Before / after index comparison for NFR-03
+-- Technique: IGNORE INDEX forces the plan the query would get WITHOUT the index, so the index
+-- does not have to be dropped (appointment's FK columns are covered by these same indexes).
+-- Run AFTER the bulk seeds. Needs MySQL 8.0.18+. Compare "actual time" and "rows" of each pair.
 USE healthcare;
 
--- ============================================================
--- Q03 — TRƯỚC index (dùng IGNORE INDEX để ép full scan)
--- Kỳ vọng: Table scan on a, actual time ~40ms
--- ============================================================
+ANALYZE TABLE shift, appointment, medical_record_audit_log;
+
+SET @heavy_patient = (SELECT MIN(patient_id) FROM patient WHERE full_name LIKE 'Bulk Patient %');
+SET @a_shift = (SELECT MIN(shift_id) FROM shift WHERE doctor_id > 10);
+SET @a_doctor = 1, @a_date = '2026-11-25';
+
+-- ===== Pair 1: patient history (Q03) =====
+-- BEFORE: table scan of appointment
 EXPLAIN ANALYZE
-SELECT a.appointment_id, a.start_time, a.status,
-       d.full_name AS doctor_name, mr.diagnosis
+SELECT a.appointment_id, a.start_time, a.status
 FROM appointment a IGNORE INDEX (idx_appt_patient_date)
-JOIN shift s        ON s.shift_id = a.shift_id
-JOIN doctor d       ON d.doctor_id = s.doctor_id
-LEFT JOIN medical_record mr ON mr.appointment_id = a.appointment_id
-WHERE a.patient_id = 1
+WHERE a.patient_id = @heavy_patient
 ORDER BY a.start_time DESC;
-
--- ============================================================
--- Q03 — SAU index (dùng index bình thường)
--- Kỳ vọng: Index lookup on a using idx_appt_patient_date
---          actual time < 1ms, rows=301
--- ============================================================
+-- AFTER: index range scan, already sorted (no filesort)
 EXPLAIN ANALYZE
-SELECT a.appointment_id, a.start_time, a.status,
-       d.full_name AS doctor_name, mr.diagnosis
+SELECT a.appointment_id, a.start_time, a.status
 FROM appointment a
-JOIN shift s        ON s.shift_id = a.shift_id
-JOIN doctor d       ON d.doctor_id = s.doctor_id
-LEFT JOIN medical_record mr ON mr.appointment_id = a.appointment_id
-WHERE a.patient_id = 1
+WHERE a.patient_id = @heavy_patient
 ORDER BY a.start_time DESC;
 
--- ============================================================
--- Q01 — TRƯỚC index
--- Kỳ vọng: Table scan on sh
--- ============================================================
+-- ===== Pair 2: shifts of a doctor on a day (Q01) =====
 EXPLAIN ANALYZE
-SELECT sh.shift_id, sh.start_time, sh.end_time
-FROM shift sh IGNORE INDEX (idx_shift_doctor_date)
-WHERE sh.status = 'ACTIVE'
-  AND sh.doctor_id = 1
-  AND sh.shift_date = CURRENT_DATE
-  AND NOT EXISTS (
-      SELECT 1 FROM appointment a
-      WHERE a.shift_id = sh.shift_id AND a.status <> 'CANCELLED'
-  );
+SELECT shift_id, start_time, end_time
+FROM shift IGNORE INDEX (idx_shift_doctor_date, idx_shift_room_date)
+WHERE doctor_id = @a_doctor AND shift_date = @a_date AND status = 'ACTIVE';
 
--- ============================================================
--- Q01 — SAU index
--- Kỳ vọng: Index lookup on sh using idx_shift_doctor_date
--- ============================================================
 EXPLAIN ANALYZE
-SELECT sh.shift_id, sh.start_time, sh.end_time
-FROM shift sh
-WHERE sh.status = 'ACTIVE'
-  AND sh.doctor_id = 1
-  AND sh.shift_date = CURRENT_DATE
-  AND NOT EXISTS (
-      SELECT 1 FROM appointment a
-      WHERE a.shift_id = sh.shift_id AND a.status <> 'CANCELLED'
-  );
+SELECT shift_id, start_time, end_time
+FROM shift
+WHERE doctor_id = @a_doctor AND shift_date = @a_date AND status = 'ACTIVE';
+
+-- ===== Pair 3: BR-09 overlap probe executed by the booking trigger on every INSERT =====
+EXPLAIN ANALYZE
+SELECT 1 FROM appointment a IGNORE INDEX (idx_appt_shift_time, idx_appt_patient_date)
+WHERE a.shift_id = @a_shift AND a.status <> 'CANCELLED'
+  AND '2026-01-05 10:00:00' < a.end_time AND a.start_time < '2026-01-05 10:30:00'
+LIMIT 1;
+
+EXPLAIN ANALYZE
+SELECT 1 FROM appointment a
+WHERE a.shift_id = @a_shift AND a.status <> 'CANCELLED'
+  AND '2026-01-05 10:00:00' < a.end_time AND a.start_time < '2026-01-05 10:30:00'
+LIMIT 1;
+
+-- ===== Pair 4: audit trail of a record (NFR-04) =====
+EXPLAIN ANALYZE
+SELECT audit_id, action, action_at
+FROM medical_record_audit_log IGNORE INDEX (idx_mr_audit_record)
+WHERE record_id = 1 ORDER BY action_at DESC;
+
+EXPLAIN ANALYZE
+SELECT audit_id, action, action_at
+FROM medical_record_audit_log
+WHERE record_id = 1 ORDER BY action_at DESC;
