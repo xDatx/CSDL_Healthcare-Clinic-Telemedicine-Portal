@@ -12,10 +12,12 @@ CREATE TABLE room (
     CONSTRAINT ck_room_floor CHECK (floor BETWEEN 1 AND 20)
 );
 
+-- DOCTOR = superclass of the disjoint/total specialization (Elmasri option 8A)
 CREATE TABLE doctor (
     doctor_id       INT AUTO_INCREMENT PRIMARY KEY,
     full_name       VARCHAR(100) NOT NULL,
     email           VARCHAR(120) NOT NULL UNIQUE,
+    license_no      VARCHAR(50)  NOT NULL UNIQUE,
     employment_type VARCHAR(10)  NOT NULL,
     spec_type       VARCHAR(10)  NOT NULL,
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
@@ -24,17 +26,18 @@ CREATE TABLE doctor (
     CONSTRAINT ck_doctor_emp  CHECK (employment_type IN ('FULL_TIME','PART_TIME')),
     CONSTRAINT ck_doctor_spec CHECK (spec_type IN ('GP','SPECIALIST')),
     CONSTRAINT fk_doctor_admin FOREIGN KEY (created_by) REFERENCES admin (admin_id),
-    CONSTRAINT uq_doctor_spec  UNIQUE (doctor_id, spec_type)
+    CONSTRAINT uq_doctor_spec  UNIQUE (doctor_id, spec_type)   -- target of the subtype composite FKs
 );
 
+-- GP: the room is assigned per SHIFT (BR-03), so no room column here.
+-- ON UPDATE stays RESTRICT on purpose: MySQL rejects CHECK on a column that is
+-- part of a FK with ON UPDATE CASCADE (error 3823).
 CREATE TABLE gp (
     doctor_id INT PRIMARY KEY,
     spec_type VARCHAR(10) NOT NULL DEFAULT 'GP',
-    room_id   INT NOT NULL,
     CONSTRAINT ck_gp_spec CHECK (spec_type = 'GP'),
     CONSTRAINT fk_gp_doctor FOREIGN KEY (doctor_id, spec_type)
-        REFERENCES doctor (doctor_id, spec_type) ON DELETE CASCADE,
-    CONSTRAINT fk_gp_room FOREIGN KEY (room_id) REFERENCES room (room_id)
+        REFERENCES doctor (doctor_id, spec_type) ON DELETE CASCADE
 );
 
 CREATE TABLE specialist (

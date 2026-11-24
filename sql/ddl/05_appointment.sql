@@ -16,4 +16,3 @@ CREATE TABLE appointment (
     CONSTRAINT fk_appt_patient FOREIGN KEY (patient_id) REFERENCES patient (patient_id),
     CONSTRAINT fk_appt_shift   FOREIGN KEY (shift_id)   REFERENCES shift (shift_id)
 );
-

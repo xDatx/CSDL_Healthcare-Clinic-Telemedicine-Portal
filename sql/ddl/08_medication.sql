@@ -9,6 +9,7 @@ CREATE TABLE medication (
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- BR-25: every create / update / deactivate of a catalog entry is logged (append-only).
 CREATE TABLE medication_audit_log (
     audit_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
     medication_id INT NOT NULL,
@@ -17,5 +18,7 @@ CREATE TABLE medication_audit_log (
     action_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     old_values    JSON,
     new_values    JSON,
-    CONSTRAINT ck_med_audit_action CHECK (action IN ('INSERT','UPDATE','DEACTIVATE'))
+    CONSTRAINT ck_med_audit_action CHECK (action IN ('INSERT','UPDATE','DEACTIVATE')),
+    CONSTRAINT fk_med_audit_med   FOREIGN KEY (medication_id) REFERENCES medication (medication_id),
+    CONSTRAINT fk_med_audit_admin FOREIGN KEY (admin_id)      REFERENCES admin (admin_id)
 );

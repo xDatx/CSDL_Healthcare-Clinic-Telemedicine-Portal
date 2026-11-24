@@ -13,6 +13,7 @@ CREATE TABLE consultation_request (
     opinion               TEXT,
     CONSTRAINT ck_cr_status CHECK (status IN ('PENDING','APPROVED','DECLINED','COMPLETED')),
     CONSTRAINT ck_cr_diff   CHECK (requesting_doctor_id <> consulting_doctor_id),
+    CONSTRAINT ck_cr_expiry CHECK (expires_at IS NULL OR expires_at > requested_at),
     CONSTRAINT ck_cr_state CHECK (
         (status = 'PENDING'   AND responded_at IS NULL     AND opinion IS NULL) OR
         (status IN ('APPROVED','DECLINED') AND responded_at IS NOT NULL) OR
