@@ -32,22 +32,27 @@ CREATE ROLE 'r_patient', 'r_doctor', 'r_admin';
 REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'r_patient', 'r_doctor', 'r_admin';
 
 -- =====================================================================================
--- PATIENT: book, see own history, browse availability and the medication catalog
+-- PATIENT: book, cancel own booking, see own history/appointments, browse availability
 -- =====================================================================================
-GRANT EXECUTE ON PROCEDURE healthcare.sp_book_appointment   TO 'r_patient';
-GRANT EXECUTE ON PROCEDURE healthcare.sp_patient_history    TO 'r_patient';
-GRANT EXECUTE ON PROCEDURE healthcare.sp_read_medical_record TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_book_appointment     TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_cancel_appointment   TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_patient_appointments TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_patient_history      TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_read_medical_record  TO 'r_patient';
 GRANT SELECT ON healthcare.v_doctor_availability TO 'r_patient';
 GRANT SELECT ON healthcare.v_active_medication   TO 'r_patient';
 
 -- =====================================================================================
 -- DOCTOR: own schedule, clinical write path, consultation workflow
 -- =====================================================================================
-GRANT EXECUTE ON PROCEDURE healthcare.sp_read_medical_record TO 'r_doctor';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_read_medical_record    TO 'r_doctor';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_list_my_consultations  TO 'r_doctor';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_get_consultation       TO 'r_doctor';
 GRANT SELECT ON healthcare.v_doctor_availability          TO 'r_doctor';
 GRANT SELECT ON healthcare.v_appointment_detail           TO 'r_doctor';
 GRANT SELECT ON healthcare.v_active_consultation_access   TO 'r_doctor';
 GRANT SELECT ON healthcare.v_active_medication            TO 'r_doctor';
+GRANT SELECT ON healthcare.v_active_doctor_directory      TO 'r_doctor';
 
 -- register / adjust shifts (BR-03, BR-05, BR-24, BR-26 are enforced by triggers)
 GRANT SELECT, INSERT, UPDATE ON healthcare.shift TO 'r_doctor';
@@ -97,6 +102,7 @@ GRANT SELECT ON healthcare.v_doctor_availability  TO 'r_admin';
 GRANT SELECT ON healthcare.v_part_time_pay        TO 'r_admin';
 GRANT SELECT ON healthcare.v_active_medication    TO 'r_admin';
 GRANT SELECT ON healthcare.v_active_consultation_access TO 'r_admin';
+GRANT SELECT ON healthcare.v_active_doctor_directory    TO 'r_admin';
 GRANT SELECT ON healthcare.medical_record_audit_log TO 'r_admin';            -- who read what (NFR-04)
 GRANT SELECT ON healthcare.medication_audit_log     TO 'r_admin';            -- BR-25
 
