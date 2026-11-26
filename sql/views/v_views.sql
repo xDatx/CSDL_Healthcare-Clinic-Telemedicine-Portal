@@ -76,3 +76,12 @@ CREATE OR REPLACE VIEW v_active_medication AS
 SELECT medication_id, name, unit, description
 FROM medication
 WHERE is_active = TRUE;
+
+-- Active doctor directory for consultation peer selection (hides email, license_no)
+CREATE OR REPLACE VIEW v_active_doctor_directory AS
+SELECT d.doctor_id, d.full_name, d.spec_type,
+       s.name AS specialty_name, sp.years_practice
+FROM doctor d
+LEFT JOIN specialist sp ON sp.doctor_id = d.doctor_id
+LEFT JOIN specialty s   ON s.specialty_id = sp.specialty_id
+WHERE d.is_active = TRUE;
