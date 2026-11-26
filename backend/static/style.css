@@ -1,0 +1,6 @@
+body { font-size: .95rem; }
+.card-stat .display-6 { font-weight: 600; }
+.table th { white-space: nowrap; font-weight: 600; }
+.record-box { white-space: pre-wrap; }
+pre.json { margin: 0; font-size: .75rem; white-space: pre-wrap; max-width: 28rem; }
+.login-card { max-width: 26rem; margin: 3rem auto; }

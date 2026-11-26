@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import availability with context %}
+{% block title %}Đặt lịch khám{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Đặt lịch khám</h1>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4"><input name="q" value="{{ q }}" class="form-control" placeholder="Tên bác sĩ"></div>
+  <div class="col-md-3"><select name="spec" class="form-select">
+    <option value="">Tất cả loại bác sĩ</option>
+    <option value="GP" {{ 'selected' if spec == 'GP' }}>Đa khoa (GP)</option>
+    <option value="SPECIALIST" {{ 'selected' if spec == 'SPECIALIST' }}>Chuyên khoa</option></select></div>
+  <div class="col-md-3 form-check pt-2 ms-2"><input type="checkbox" class="form-check-input" name="all" value="1" id="all" {{ 'checked' if show_all }}>
+    <label class="form-check-label" for="all">Hiện cả ca đã qua</label></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Lọc</button></div>
+</form>
+<p class="text-muted small">Chọn giờ bắt đầu và thời lượng trong ca của bác sĩ. Lịch mới ở trạng thái <b>PENDING</b> cho đến khi lễ tân xác nhận.</p>
+{{ availability(shifts, url_for('patient.book')) }}
+{% endblock %}

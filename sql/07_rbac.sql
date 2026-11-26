@@ -39,6 +39,9 @@ GRANT EXECUTE ON PROCEDURE healthcare.sp_cancel_appointment   TO 'r_patient';
 GRANT EXECUTE ON PROCEDURE healthcare.sp_patient_appointments TO 'r_patient';
 GRANT EXECUTE ON PROCEDURE healthcare.sp_patient_history      TO 'r_patient';
 GRANT EXECUTE ON PROCEDURE healthcare.sp_read_medical_record  TO 'r_patient';
+GRANT EXECUTE ON PROCEDURE healthcare.sp_register_patient     TO 'r_patient';  -- FR-01
+GRANT EXECUTE ON PROCEDURE healthcare.sp_get_my_profile       TO 'r_patient';  -- FR-01
+GRANT EXECUTE ON PROCEDURE healthcare.sp_update_my_profile    TO 'r_patient';  -- FR-01
 GRANT SELECT ON healthcare.v_doctor_availability TO 'r_patient';
 GRANT SELECT ON healthcare.v_active_medication   TO 'r_patient';
 
@@ -56,6 +59,7 @@ GRANT SELECT ON healthcare.v_active_doctor_directory      TO 'r_doctor';
 
 -- register / adjust shifts (BR-03, BR-05, BR-24, BR-26 are enforced by triggers)
 GRANT SELECT, INSERT, UPDATE ON healthcare.shift TO 'r_doctor';
+GRANT SELECT ON healthcare.room TO 'r_doctor';   -- room dropdown in the shift form (BR-03); read-only
 
 -- move an appointment through its lifecycle (BR-11); only the key and status are visible
 GRANT SELECT (appointment_id, status) ON healthcare.appointment TO 'r_doctor';

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Hồ sơ bệnh án{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Hồ sơ bệnh án #{{ rec.record_id }}</h1>
+  <div class="d-flex gap-2">
+    {% if can_edit %}
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('doctor.record_edit', record_id=rec.record_id) }}">Sửa hồ sơ</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('doctor.consultation_new', record_id=rec.record_id) }}">Mời hội chẩn</a>
+    {% endif %}
+    <a class="btn btn-outline-dark btn-sm" href="{{ back }}">Quay lại</a>
+  </div>
+</div>
+
+{% if info %}
+<div class="card mb-3"><div class="card-body small">
+  <b>Bệnh nhân:</b> {{ info.patient_name }} &nbsp;|&nbsp; <b>Ngày khám:</b> {{ info.appointment_date|dmy }}
+  &nbsp;|&nbsp; <b>Bác sĩ điều trị:</b> {{ info.doctor_name }} &nbsp;|&nbsp; <b>Lịch hẹn:</b> #{{ info.appointment_id }}
+</div></div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-md-5"><div class="card h-100"><div class="card-header">Dấu hiệu sinh tồn</div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item d-flex justify-content-between"><span>Huyết áp</span>
+        <b>{% if rec.systolic_bp %}{{ rec.systolic_bp }}/{{ rec.diastolic_bp }} mmHg{% else %}—{% endif %}</b></li>
+      <li class="list-group-item d-flex justify-content-between"><span>Nhịp tim</span><b>{{ (rec.heart_rate ~ ' bpm') if rec.heart_rate else '—' }}</b></li>
+      <li class="list-group-item d-flex justify-content-between"><span>Nhiệt độ</span><b>{{ (rec.temperature_c ~ ' °C') if rec.temperature_c else '—' }}</b></li>
+      <li class="list-group-item d-flex justify-content-between"><span>SpO₂</span><b>{{ (rec.oxygen_saturation ~ ' %') if rec.oxygen_saturation else '—' }}</b></li>
+    </ul></div></div>
+  <div class="col-md-7"><div class="card h-100"><div class="card-header">Khám &amp; chẩn đoán</div>
+    <div class="card-body">
+      <h6>Chẩn đoán</h6><p class="record-box">{{ rec.diagnosis or '—' }}</p>
+      <h6>Triệu chứng</h6><p class="record-box">{{ rec.symptoms or '—' }}</p>
+      <h6>Ghi chú</h6><p class="record-box mb-0">{{ rec.notes or '—' }}</p>
+    </div></div></div>
+</div>
+
+<div class="card mt-3"><div class="card-header">Đơn thuốc</div>
+<div class="table-responsive"><table class="table mb-0">
+  <thead><tr><th>Thuốc</th><th>Số lượng</th><th>Liều dùng</th><th>Tần suất</th><th>Số ngày</th></tr></thead>
+  <tbody>
+  {% for i in items %}
+    <tr><td>{{ i.medication }}</td><td>{{ i.quantity }}</td><td>{{ i.dosage }}</td><td>{{ i.frequency }}</td><td>{{ i.duration_days }}</td></tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-3">Không có đơn thuốc.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+
+{% if consults %}
+<div class="card mt-3"><div class="card-header">Yêu cầu hội chẩn liên quan</div>
+<ul class="list-group list-group-flush">
+  {% for c in consults %}
+  <li class="list-group-item d-flex justify-content-between">
+    <span>#{{ c.request_id }}: {{ c.requesting_doctor_name }} → {{ c.consulting_doctor_name }}</span>
+    <span>{{ badge(c.status) }} <a class="ms-2" href="{{ url_for('doctor.consultation', request_id=c.request_id) }}">Chi tiết</a></span>
+  </li>
+  {% endfor %}
+</ul></div>
+{% endif %}
+<p class="text-muted small mt-3">Lần xem này đã được ghi vào nhật ký truy cập hồ sơ.</p>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager with context %}
+{% block title %}Bệnh nhân{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Bệnh nhân</h1>
+  <a class="btn btn-primary" href="{{ url_for('admin.patient_new') }}">+ Thêm bệnh nhân</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-5"><input name="q" value="{{ q }}" class="form-control" placeholder="Tìm theo tên, số điện thoại hoặc email"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Tìm</button></div>
+</form>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Họ tên</th><th>Ngày sinh</th><th>Điện thoại</th><th>Email</th><th></th></tr></thead>
+  <tbody>
+  {% for p in data.rows %}
+    <tr><td>{{ p.patient_id }}</td><td>{{ p.full_name }}</td><td>{{ p.dob|dmy }}</td><td>{{ p.phone or '—' }}</td><td>{{ p.email or '—' }}</td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.patient_detail', patient_id=p.patient_id) }}">Chi tiết</a></td></tr>
+  {% else %}<tr><td colspan="6" class="text-center text-muted py-4">Không tìm thấy bệnh nhân.</td></tr>{% endfor %}
+  </tbody></table></div>
+{{ pager(data) }}
+{% endblock %}

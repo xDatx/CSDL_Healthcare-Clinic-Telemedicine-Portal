@@ -27,6 +27,7 @@ SOURCE triggers/trg_appointment_audit.sql;
 SOURCE triggers/trg_medication_consultation.sql;
 
 SOURCE procedures/sp_read_medical_record.sql;
+SOURCE procedures/sp_patient_self_service.sql;
 SOURCE views/v_views.sql;
 
 SOURCE 05_seed_data.sql;

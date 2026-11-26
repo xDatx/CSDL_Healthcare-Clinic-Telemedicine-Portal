@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Tổng quan{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Tổng quan phòng khám</h1>
+<div class="row g-3 mb-4">
+  {% for label, val in [('Bệnh nhân', stats.patients), ('Bác sĩ đang hoạt động', stats.doctors), ('Lịch hẹn hôm nay', stats.today), ('Chờ xác nhận', stats.pending)] %}
+  <div class="col-6 col-md-3"><div class="card card-stat"><div class="card-body"><div class="text-muted">{{ label }}</div><div class="display-6">{{ val }}</div></div></div></div>
+  {% endfor %}
+</div>
+<div class="card"><div class="card-header d-flex justify-content-between"><span>Lịch hẹn chờ xác nhận</span>
+  <a href="{{ url_for('admin.appointments', status='PENDING') }}" class="small">Xem tất cả</a></div>
+<div class="table-responsive"><table class="table mb-0 align-middle">
+  <thead><tr><th>#</th><th>Thời gian</th><th>Bệnh nhân</th><th>Bác sĩ</th><th></th></tr></thead>
+  <tbody>
+  {% for a in pending %}
+    <tr><td>{{ a.appointment_id }}</td><td>{{ a.start_time|dmyhm }}</td><td>{{ a.patient_name }}</td><td>{{ a.doctor_name }}</td>
+      <td class="text-end"><form method="post" action="{{ url_for('admin.appointment_status', appointment_id=a.appointment_id) }}" class="d-inline">{{ csrf() }}
+        <input type="hidden" name="status" value="CONFIRMED"><input type="hidden" name="next" value="{{ url_for('admin.home') }}">
+        <button class="btn btn-sm btn-success">Xác nhận</button></form></td></tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-4">Không có lịch hẹn chờ xác nhận.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

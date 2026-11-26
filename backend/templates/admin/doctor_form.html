@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Thêm bác sĩ{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Thêm bác sĩ</h1>
+<form method="post" class="card"><div class="card-body row g-3">
+  {{ csrf() }}
+  {{ field('Họ tên', 'full_name', form.get('full_name'), required=True) }}
+  {{ field('Email (dùng để đăng nhập)', 'email', form.get('email'), 'email', True) }}
+  {{ field('Số giấy phép hành nghề', 'license_no', form.get('license_no'), required=True) }}
+  <div class="col-md-3"><label class="form-label">Hợp đồng</label><select name="employment_type" class="form-select">
+    <option value="FULL_TIME" {{ 'selected' if form.get('employment_type') == 'FULL_TIME' }}>Full-time</option>
+    <option value="PART_TIME" {{ 'selected' if form.get('employment_type') == 'PART_TIME' }}>Part-time</option></select></div>
+  <div class="col-md-3"><label class="form-label">Loại bác sĩ</label><select name="spec_type" id="spec" class="form-select">
+    <option value="GP" {{ 'selected' if form.get('spec_type') == 'GP' }}>Đa khoa (GP)</option>
+    <option value="SPECIALIST" {{ 'selected' if form.get('spec_type') == 'SPECIALIST' }}>Chuyên khoa</option></select></div>
+  <div class="col-md-4 sp-only"><label class="form-label">Chuyên khoa</label><select name="specialty_id" class="form-select">
+    {% for s in specialties %}<option value="{{ s.specialty_id }}" {{ 'selected' if form.get('specialty_id')|string == s.specialty_id|string }}>{{ s.name }}</option>{% endfor %}</select></div>
+  <div class="col-md-2 sp-only"><label class="form-label">Số năm hành nghề</label><input type="number" name="years_practice" min="0" max="70" class="form-control" value="{{ form.get('years_practice') or 0 }}"></div>
+  <div class="col-12 small text-muted">Bác sĩ được tạo ở trạng thái chưa kích hoạt, thêm hồ sơ GP/Chuyên khoa rồi mới kích hoạt (BR-01).</div>
+  <div class="col-12"><button class="btn btn-primary">Tạo bác sĩ</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.doctors') }}">Hủy</a></div>
+</div></form>
+{% endblock %}
+{% block scripts %}
+<script>
+  const spec = document.getElementById('spec');
+  const sync = () => document.querySelectorAll('.sp-only').forEach(e => e.style.display = spec.value === 'SPECIALIST' ? '' : 'none');
+  spec.addEventListener('change', sync); sync();
+</script>
+{% endblock %}

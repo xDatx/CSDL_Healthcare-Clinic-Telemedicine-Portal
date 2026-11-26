@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Đăng ký bệnh nhân{% endblock %}
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 720px">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-1">Đăng ký tài khoản bệnh nhân</h1>
+    <p class="text-muted small">Hồ sơ bệnh nhân và tài khoản đăng nhập được tạo cùng lúc (FR-01). Email dùng làm tên đăng nhập.</p>
+    <form method="post" class="row g-3">
+      {{ csrf() }}
+      {{ field('Họ tên', 'full_name', request.form.get('full_name', ''), required=True, cols=12) }}
+      {{ field('Ngày sinh', 'dob', request.form.get('dob', ''), 'date', True) }}
+      {{ field('Số điện thoại', 'phone', request.form.get('phone', '')) }}
+      {{ field('Email (tên đăng nhập)', 'email', request.form.get('email', ''), 'email', True, 12) }}
+      <div class="col-12"><label class="form-label">Địa chỉ</label>
+        <input name="address" class="form-control" value="{{ request.form.get('address', '') }}"></div>
+      <div class="col-md-6"><label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+        <input type="password" name="password" class="form-control" minlength="8" required autocomplete="new-password"></div>
+      <div class="col-md-6"><label class="form-label">Nhập lại mật khẩu <span class="text-danger">*</span></label>
+        <input type="password" name="password2" class="form-control" minlength="8" required autocomplete="new-password"></div>
+      <div class="col-12 small text-muted">Mật khẩu tối thiểu 8 ký tự. Cần có số điện thoại hoặc email (BR-00).</div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary">Đăng ký</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('auth.login') }}">Đã có tài khoản? Đăng nhập</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

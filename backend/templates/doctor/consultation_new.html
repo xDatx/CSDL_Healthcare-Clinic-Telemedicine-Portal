@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Mời hội chẩn{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">Mời hội chẩn – hồ sơ #{{ record_id }}</h1>
+<p class="text-muted">Bệnh nhân: <b>{{ info.patient_name }}</b> · Ngày khám {{ info.appointment_date|dmy }}</p>
+<form method="post" class="card"><div class="card-body row g-3">
+  {{ csrf() }}
+  <div class="col-md-6"><label class="form-label">Bác sĩ được mời <span class="text-danger">*</span></label>
+    <select name="consulting_doctor_id" class="form-select" required><option value="">— chọn bác sĩ —</option>
+      {% for d in colleagues %}<option value="{{ d.doctor_id }}">{{ d.full_name }} · {{ d.specialty_name or 'Đa khoa' }}</option>{% endfor %}</select></div>
+  <div class="col-12"><label class="form-label">Lý do hội chẩn <span class="text-danger">*</span></label>
+    <textarea name="reason" rows="4" class="form-control" required></textarea></div>
+  <div class="col-12 small text-muted">Bác sĩ được mời chỉ xem được hồ sơ sau khi chấp nhận, trong thời hạn họ quy định (BR-22).</div>
+  <div class="col-12"><button class="btn btn-primary">Gửi yêu cầu</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('doctor.record', record_id=record_id) }}">Hủy</a></div>
+</div></form>
+{% endblock %}

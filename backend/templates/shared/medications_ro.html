@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Danh mục thuốc{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Danh mục thuốc đang sử dụng</h1>
+<form class="row g-2 mb-3" method="get" action="{{ url_for(endpoint) }}">
+  <div class="col-md-5"><input name="q" value="{{ q }}" class="form-control" placeholder="Tìm theo tên thuốc"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Tìm</button></div>
+</form>
+<div class="table-responsive"><table class="table table-sm bg-white">
+  <thead><tr><th>Tên thuốc</th><th>Đơn vị</th><th>Mô tả</th></tr></thead>
+  <tbody>
+  {% for m in rows %}<tr><td>{{ m.name }}</td><td>{{ m.unit }}</td><td>{{ m.description or '' }}</td></tr>
+  {% else %}<tr><td colspan="3" class="text-center text-muted py-3">Không tìm thấy thuốc.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

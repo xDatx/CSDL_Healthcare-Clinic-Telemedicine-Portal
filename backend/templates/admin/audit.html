@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager with context %}
+{% block title %}Nhật ký{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Nhật ký (append-only)</h1>
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><a class="nav-link {{ 'active' if kind == 'record' }}" href="{{ url_for('admin.audit', kind='record') }}">Truy cập hồ sơ bệnh án (NFR-04)</a></li>
+  <li class="nav-item"><a class="nav-link {{ 'active' if kind == 'medication' }}" href="{{ url_for('admin.audit', kind='medication') }}">Danh mục thuốc (BR-25)</a></li>
+</ul>
+
+{% if kind == 'record' %}
+<form class="row g-2 mb-3" method="get"><input type="hidden" name="kind" value="record">
+  <div class="col-md-2"><input name="record_id" value="{{ record_id }}" class="form-control" placeholder="Mã hồ sơ"></div>
+  <div class="col-md-2"><select name="action" class="form-select"><option value="">Mọi thao tác</option>
+    {% for a in ['SELECT', 'INSERT', 'UPDATE'] %}<option {{ 'selected' if action == a }}>{{ a }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Lọc</button></div>
+</form>
+<div class="table-responsive"><table class="table table-sm align-middle bg-white">
+  <thead><tr><th>#</th><th>Thời điểm</th><th>Hồ sơ</th><th>Người thao tác</th><th>Thao tác</th><th>Chi tiết</th></tr></thead>
+  <tbody>
+  {% for a in data.rows %}
+    <tr><td>{{ a.audit_id }}</td><td>{{ a.action_at|dmyhm }}</td>
+      <td><a href="{{ url_for('admin.record', record_id=a.record_id) }}" title="Cần quyền VIEW_ALL_RECORDS">#{{ a.record_id }}</a></td>
+      <td>{{ a.actor_name }} <span class="badge text-bg-light">{{ a.actor_type }}</span></td>
+      <td><span class="badge text-bg-{{ {'SELECT': 'secondary', 'INSERT': 'success', 'UPDATE': 'warning'}.get(a.action, 'light') }}">{{ a.action }}</span></td>
+      <td><pre class="json">{{ a.details or '' }}</pre></td></tr>
+  {% else %}<tr><td colspan="6" class="text-center text-muted py-4">Không có bản ghi.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% else %}
+<div class="table-responsive"><table class="table table-sm align-middle bg-white">
+  <thead><tr><th>#</th><th>Thời điểm</th><th>Thuốc</th><th>Admin</th><th>Thao tác</th><th>Trước</th><th>Sau</th></tr></thead>
+  <tbody>
+  {% for a in data.rows %}
+    <tr><td>{{ a.audit_id }}</td><td>{{ a.action_at|dmyhm }}</td><td>{{ a.medication_name }}</td><td>{{ a.admin_name }}</td><td>{{ a.action }}</td>
+      <td><pre class="json">{{ a.old_values or '' }}</pre></td><td><pre class="json">{{ a.new_values or '' }}</pre></td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">Không có bản ghi.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endif %}
+{{ pager(data) }}
+{% endblock %}

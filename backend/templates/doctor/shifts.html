@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Ca làm việc{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Ca làm việc của tôi</h1>
+<div class="card mb-4"><div class="card-header">Đăng ký ca mới</div><div class="card-body">
+  <form method="post" class="row g-3">
+    {{ csrf() }}
+    <div class="col-md-3"><label class="form-label">Ngày</label><input type="date" name="shift_date" class="form-control" required></div>
+    <div class="col-md-2"><label class="form-label">Bắt đầu</label><input type="time" name="start_time" class="form-control" required></div>
+    <div class="col-md-2"><label class="form-label">Kết thúc</label><input type="time" name="end_time" class="form-control" required></div>
+    {% if prof.spec_type != 'SPECIALIST' %}
+    <div class="col-md-2"><label class="form-label">Phòng {% if prof.spec_type == 'GP' %}<span class="text-danger">*</span>{% endif %}</label>
+      {% if rooms %}<select name="room_id" class="form-select"><option value="">—</option>
+        {% for r in rooms %}<option value="{{ r.room_id }}">{{ r.room_code }} (tầng {{ r.floor }})</option>{% endfor %}</select>
+      {% else %}<input type="number" name="room_id" min="1" class="form-control" placeholder="Mã phòng"
+                       title="Tài khoản bác sĩ chưa có quyền xem danh sách phòng; nhập mã phòng (room_id)">{% endif %}</div>
+    {% endif %}
+    {% if prof.employment_type != 'FULL_TIME' %}
+    <div class="col-md-2"><label class="form-label">Đơn giá / giờ {% if prof.employment_type == 'PART_TIME' %}<span class="text-danger">*</span>{% endif %}</label>
+      <input type="number" name="rate_per_hour" min="1" step="1000" class="form-control"></div>
+    {% endif %}
+    <div class="col-12"><button class="btn btn-primary">Đăng ký ca</button>
+      <span class="text-muted small ms-2">Bác sĩ đa khoa (GP) cần phòng; bác sĩ chuyên khoa không có phòng; part-time cần đơn giá (BR-03, BR-24, BR-26).</span></div>
+  </form></div></div>
+
+<div class="table-responsive"><table class="table align-middle bg-white">
+  <thead><tr><th>Ngày</th><th>Giờ</th><th>Phòng</th><th>Đơn giá</th><th>Lịch hẹn</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for s in shifts %}
+    <tr>
+      <td>{{ s.shift_date|dmy }}</td><td>{{ s.start_time|hm }}–{{ s.end_time|hm }}</td>
+      <td>{{ s.room_id or '—' }}</td><td>{{ s.rate_per_hour|money if s.rate_per_hour else '—' }}</td>
+      <td>{{ s.booked_count or 0 }}</td><td>{{ badge(s.status) }}</td>
+      <td class="text-end">{% if s.status == 'ACTIVE' %}
+        <form method="post" action="{{ url_for('doctor.shift_cancel', shift_id=s.shift_id) }}" onsubmit="return confirm('Hủy ca này?')">{{ csrf() }}
+          <button class="btn btn-sm btn-outline-danger">Hủy ca</button></form>{% endif %}</td>
+    </tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">Chưa có ca làm việc.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Danh mục thuốc{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Danh mục thuốc <span class="text-muted small">(không xóa, chỉ ngừng sử dụng – BR-19; mọi thay đổi được ghi nhật ký – BR-25)</span></h1>
+
+<div class="card mb-4"><div class="card-header">{{ 'Sửa thuốc #' ~ edit.medication_id if edit else 'Thêm thuốc' }}</div><div class="card-body">
+  <form method="post" action="{{ url_for('admin.medication_edit', medication_id=edit.medication_id) if edit else url_for('admin.medication_add') }}" class="row g-2">
+    {{ csrf() }}
+    <div class="col-md-4"><input name="name" class="form-control" placeholder="Tên thuốc" value="{{ edit.name if edit else '' }}" required></div>
+    <div class="col-md-2"><input name="unit" class="form-control" placeholder="Đơn vị" value="{{ edit.unit if edit else '' }}" required></div>
+    <div class="col-md-4"><input name="description" class="form-control" placeholder="Mô tả" value="{{ (edit.description or '') if edit else '' }}"></div>
+    <div class="col-auto"><button class="btn btn-primary">Lưu</button>
+      {% if edit %}<a class="btn btn-outline-secondary" href="{{ url_for('admin.medications') }}">Hủy</a>{% endif %}</div>
+  </form></div></div>
+
+{% if not edit %}
+<form class="row g-2 mb-3" method="get"><div class="col-md-4"><input name="q" value="{{ q }}" class="form-control" placeholder="Tìm tên thuốc"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Tìm</button></div></form>
+<div class="table-responsive"><table class="table align-middle bg-white">
+  <thead><tr><th>#</th><th>Tên</th><th>Đơn vị</th><th>Mô tả</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for m in rows %}
+    <tr class="{{ '' if m.is_active else 'text-muted' }}"><td>{{ m.medication_id }}</td><td>{{ m.name }}</td><td>{{ m.unit }}</td><td>{{ m.description or '' }}</td>
+      <td><span class="badge text-bg-{{ 'success' if m.is_active else 'secondary' }}">{{ 'Đang dùng' if m.is_active else 'Ngừng' }}</span></td>
+      <td class="text-end"><div class="d-inline-flex gap-1">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.medication_edit', medication_id=m.medication_id) }}">Sửa</a>
+        <form method="post" action="{{ url_for('admin.medication_toggle', medication_id=m.medication_id) }}">{{ csrf() }}
+          <button class="btn btn-sm btn-outline-{{ 'danger' if m.is_active else 'success' }}">{{ 'Ngừng dùng' if m.is_active else 'Dùng lại' }}</button></form></div></td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Ca làm việc{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Ca làm việc</h1>
+<div class="card mb-4"><div class="card-header">Tạo ca mới</div><div class="card-body">
+  <form method="post" class="row g-3">{{ csrf() }}
+    <div class="col-md-3"><label class="form-label">Bác sĩ</label><select name="doctor_id" class="form-select" required>
+      {% for d in doctors %}<option value="{{ d.doctor_id }}">{{ d.full_name }} ({{ 'GP' if d.spec_type == 'GP' else 'CK' }}, {{ 'FT' if d.employment_type == 'FULL_TIME' else 'PT' }})</option>{% endfor %}</select></div>
+    <div class="col-md-2"><label class="form-label">Ngày</label><input type="date" name="shift_date" class="form-control" required></div>
+    <div class="col-md-2"><label class="form-label">Bắt đầu</label><input type="time" name="start_time" class="form-control" required></div>
+    <div class="col-md-2"><label class="form-label">Kết thúc</label><input type="time" name="end_time" class="form-control" required></div>
+    <div class="col-md-3"><label class="form-label">Phòng (chỉ GP)</label><select name="room_id" class="form-select"><option value="">—</option>
+      {% for r in rooms %}<option value="{{ r.room_id }}">{{ r.room_code }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label class="form-label">Đơn giá/giờ (chỉ part-time)</label><input type="number" name="rate_per_hour" min="1" step="1000" class="form-control"></div>
+    <div class="col-12 small text-muted">Phòng được bỏ qua với bác sĩ chuyên khoa, đơn giá được bỏ qua với full-time (BR-24, BR-26).</div>
+    <div class="col-12"><button class="btn btn-primary">Tạo ca</button></div>
+  </form></div></div>
+
+<div class="mb-2"><a class="small" href="{{ url_for('admin.shifts', all=(0 if show_all else 1)) }}">{{ 'Chỉ hiện ca gần đây' if show_all else 'Hiện tất cả các ca' }}</a></div>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Ngày</th><th>Giờ</th><th>Bác sĩ</th><th>Phòng</th><th>Đơn giá</th><th>Lịch hẹn</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for s in shifts %}
+    <tr><td>{{ s.shift_id }}</td><td>{{ s.shift_date|dmy }}</td><td>{{ s.start_time|hm }}–{{ s.end_time|hm }}</td><td>{{ s.doctor_name }}</td>
+      <td>{{ s.room_code or '—' }}</td><td>{{ s.rate_per_hour|money if s.rate_per_hour else '—' }}</td><td>{{ s.booked }}</td><td>{{ badge(s.status) }}</td>
+      <td class="text-end">{% if s.status == 'ACTIVE' %}
+        <form method="post" action="{{ url_for('admin.shift_cancel', shift_id=s.shift_id) }}" onsubmit="return confirm('Hủy ca này?')">{{ csrf() }}
+          <button class="btn btn-sm btn-outline-danger">Hủy ca</button></form>{% endif %}</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% endblock %}

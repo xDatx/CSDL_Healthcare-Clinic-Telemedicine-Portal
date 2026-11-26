@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf, pager with context %}
+{% block title %}Lịch hẹn{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Lịch hẹn</h1>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3"><input name="q" value="{{ q }}" class="form-control" placeholder="Bệnh nhân / bác sĩ"></div>
+  <div class="col-md-2"><input type="date" name="date" value="{{ day }}" class="form-control"></div>
+  <div class="col-md-3"><select name="status" class="form-select"><option value="">Mọi trạng thái</option>
+    {% for s in ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] %}<option {{ 'selected' if status == s }}>{{ s }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Lọc</button></div>
+</form>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Thời gian</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Phòng</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for a in data.rows %}
+    <tr><td>{{ a.appointment_id }}</td><td>{{ a.start_time|dmyhm }}–{{ a.end_time|hm }}</td>
+      <td><a href="{{ url_for('admin.patient_detail', patient_id=a.patient_id) }}">{{ a.patient_name }}</a></td>
+      <td>{{ a.doctor_name }}</td><td>{{ a.room_code or '—' }}</td><td>{{ badge(a.status) }}</td>
+      <td class="text-end">{% if a.status in ('PENDING', 'CONFIRMED') %}
+        <form method="post" action="{{ url_for('admin.appointment_status', appointment_id=a.appointment_id) }}" class="d-inline-flex gap-1">{{ csrf() }}
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          {% if a.status == 'PENDING' %}<button name="status" value="CONFIRMED" class="btn btn-sm btn-success">Xác nhận</button>{% endif %}
+          <button name="status" value="CANCELLED" class="btn btn-sm btn-outline-danger">Hủy</button></form>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">Không có lịch hẹn.</td></tr>{% endfor %}
+  </tbody></table></div>
+{{ pager(data) }}
+{% endblock %}

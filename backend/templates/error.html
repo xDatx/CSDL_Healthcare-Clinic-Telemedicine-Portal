@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Lỗi {{ code }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-4 text-muted">{{ code }}</h1>
+  <p class="lead">{{ message }}</p>
+  <a class="btn btn-outline-primary" href="{{ request.referrer or url_for('index') }}">Quay lại</a>
+</div>
+{% endblock %}

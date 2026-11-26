@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}{{ p.full_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div><h1 class="h4 mb-1">{{ p.full_name }} <span class="text-muted small">#{{ p.patient_id }}</span></h1>
+    <div class="text-muted small">Sinh ngày {{ p.dob|dmy }} · {{ p.phone or 'chưa có SĐT' }} · {{ p.email or 'chưa có email' }}<br>{{ p.address or '' }}</div></div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('admin.patient_book', patient_id=p.patient_id) }}">Đặt lịch hẹn</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.patient_edit', patient_id=p.patient_id) }}">Sửa</a>
+    <form method="post" action="{{ url_for('admin.patient_account', patient_id=p.patient_id) }}" onsubmit="return confirm('Cấp / đặt lại mật khẩu cho bệnh nhân này?')">{{ csrf() }}
+      <button class="btn btn-outline-warning">Cấp tài khoản</button></form>
+  </div>
+</div>
+<div class="card"><div class="card-header">Lịch hẹn</div>
+<div class="table-responsive"><table class="table mb-0 align-middle">
+  <thead><tr><th>#</th><th>Thời gian</th><th>Bác sĩ</th><th>Phòng</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for a in appts %}
+    <tr><td>{{ a.appointment_id }}</td><td>{{ a.start_time|dmyhm }}</td><td>{{ a.doctor_name }}</td><td>{{ a.room_code or '—' }}</td><td>{{ badge(a.status) }}</td>
+      <td class="text-end">{% if a.status in ('PENDING', 'CONFIRMED') %}
+        <form method="post" action="{{ url_for('admin.appointment_status', appointment_id=a.appointment_id) }}" class="d-inline-flex gap-1">{{ csrf() }}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          {% if a.status == 'PENDING' %}<button name="status" value="CONFIRMED" class="btn btn-sm btn-success">Xác nhận</button>{% endif %}
+          <button name="status" value="CANCELLED" class="btn btn-sm btn-outline-danger">Hủy</button></form>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="6" class="text-center text-muted py-4">Chưa có lịch hẹn.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

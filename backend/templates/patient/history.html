@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge with context %}
+{% block title %}Lịch sử khám{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">Lịch sử khám bệnh</h1>
+<p class="text-muted small">Mỗi lần bạn mở trang này hoặc một hồ sơ đều được ghi vào nhật ký truy cập (NFR-04).</p>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>Ngày khám</th><th>Bác sĩ</th><th>Trạng thái</th><th>Chẩn đoán</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.start_time|dmyhm }}</td>
+      <td>{{ r.doctor_name }}</td>
+      <td>{{ badge(r.status) }}</td>
+      <td>{{ r.diagnosis or '—' }}</td>
+      <td class="text-end">{% if r.record_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient.record', record_id=r.record_id) }}">Xem hồ sơ</a>{% endif %}</td>
+    </tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-4">Chưa có lịch sử khám.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

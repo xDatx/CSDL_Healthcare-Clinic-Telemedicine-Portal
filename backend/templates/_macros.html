@@ -1,0 +1,65 @@
+{# Shared macros #}
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro badge(status) %}
+  {% set colors = {'PENDING': 'warning', 'CONFIRMED': 'info', 'IN_PROGRESS': 'primary', 'COMPLETED': 'success',
+                   'CANCELLED': 'secondary', 'ACTIVE': 'success', 'APPROVED': 'success', 'DECLINED': 'danger'} %}
+  <span class="badge text-bg-{{ colors.get(status, 'light') }}">{{ status }}</span>
+{% endmacro %}
+
+{% macro pager(data) %}
+  {% if data.pages > 1 %}
+  <nav aria-label="Phân trang"><ul class="pagination pagination-sm justify-content-center">
+    {% for p in range(1, data.pages + 1) if p == 1 or p == data.pages or (p - data.page)|abs <= 2 %}
+      <li class="page-item {{ 'active' if p == data.page }}">
+        <a class="page-link" href="{{ url_for(request.endpoint, **dict(request.args.to_dict(), page=p)) }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+  </ul></nav>
+  <p class="text-center text-muted small">{{ data.total }} bản ghi</p>
+  {% endif %}
+{% endmacro %}
+
+{# Free shifts with an inline booking form. action = POST url, hidden = extra hidden fields #}
+{% macro availability(shifts, action, hidden={}) %}
+<div class="table-responsive"><table class="table table-sm table-hover align-middle bg-white">
+  <thead><tr><th>Ngày</th><th>Giờ làm</th><th>Bác sĩ</th><th>Loại</th><th>Phòng</th><th class="text-end">Còn trống</th><th>Đặt lịch</th></tr></thead>
+  <tbody>
+  {% for s in shifts %}
+    <tr>
+      <td>{{ s.shift_date|dmy }}</td>
+      <td>{{ s.shift_start|hm }}–{{ s.shift_end|hm }}</td>
+      <td>{{ s.doctor_name }}</td>
+      <td><span class="badge text-bg-{{ 'success' if s.spec_type == 'GP' else 'primary' }}">{{ 'Đa khoa' if s.spec_type == 'GP' else 'Chuyên khoa' }}</span></td>
+      <td>{{ s.room_code or '—' }}</td>
+      <td class="text-end">{{ s.free_minutes }} phút</td>
+      <td>
+        <form method="post" action="{{ action }}" class="d-flex gap-1">
+          {{ csrf() }}
+          {% for k, v in hidden.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+          <input type="hidden" name="shift_id" value="{{ s.shift_id }}">
+          <input type="time" name="start_time" class="form-control form-control-sm" style="width:6.5rem"
+                 value="{{ s.shift_start|hm }}" min="{{ s.shift_start|hm }}" max="{{ s.shift_end|hm }}" required>
+          <select name="minutes" class="form-select form-select-sm" style="width:5.5rem">
+            <option value="15">15’</option><option value="30" selected>30’</option><option value="45">45’</option><option value="60">60’</option>
+          </select>
+          <select name="appointment_type" class="form-select form-select-sm" style="width:7.5rem">
+            <option value="IN_PERSON">Trực tiếp</option><option value="TELEMEDICINE">Từ xa</option>
+          </select>
+          <button class="btn btn-sm btn-primary">Đặt</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="text-center text-muted py-4">Không có ca khám phù hợp.</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endmacro %}
+
+{% macro field(label, name, value='', type='text', required=False, cols=6, extra='') %}
+  <div class="col-md-{{ cols }}">
+    <label class="form-label">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+    <input type="{{ type }}" name="{{ name }}" value="{{ value if value is not none else '' }}" class="form-control" {{ 'required' if required }} {{ extra|safe }}>
+  </div>
+{% endmacro %}

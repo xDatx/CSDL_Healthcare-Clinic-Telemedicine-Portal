@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Lương part-time{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Lương bác sĩ part-time <span class="text-muted small">(BR-24: số giờ × đơn giá của ca)</span></h1>
+<form class="row g-2 mb-3" method="get"><div class="col-auto"><input type="month" name="month" value="{{ month }}" class="form-control"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Xem</button></div></form>
+
+<div class="row g-4">
+  <div class="col-md-5"><h2 class="h6 text-uppercase text-muted">Tổng theo bác sĩ</h2>
+    <table class="table table-sm bg-white"><thead><tr><th>Bác sĩ</th><th class="text-end">Giờ</th><th class="text-end">Thành tiền</th></tr></thead>
+    <tbody>{% for t in totals %}<tr><td>{{ t.name }}</td><td class="text-end">{{ t.hours }}</td><td class="text-end">{{ t.pay|money }}</td></tr>
+      {% else %}<tr><td colspan="3" class="text-center text-muted py-3">Không có ca part-time trong tháng.</td></tr>{% endfor %}</tbody>
+    {% if totals %}<tfoot><tr class="fw-semibold"><td>Tổng</td><td class="text-end">{{ totals|sum(attribute='hours') }}</td><td class="text-end">{{ totals|sum(attribute='pay')|money }}</td></tr></tfoot>{% endif %}
+    </table></div>
+  <div class="col-md-7"><h2 class="h6 text-uppercase text-muted">Chi tiết từng ca</h2>
+    <table class="table table-sm bg-white"><thead><tr><th>Ngày</th><th>Bác sĩ</th><th class="text-end">Giờ</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th></tr></thead>
+    <tbody>{% for r in rows %}<tr><td>{{ r.shift_date|dmy }}</td><td>{{ r.doctor_name }}</td><td class="text-end">{{ r.hours_worked }}</td>
+      <td class="text-end">{{ r.rate_per_hour|money }}</td><td class="text-end">{{ r.shift_pay|money }}</td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% endblock %}

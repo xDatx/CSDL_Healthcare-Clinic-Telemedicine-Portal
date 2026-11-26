@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập{% endblock %}
+{% block content %}
+<div class="card shadow-sm login-card">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-3">Đăng nhập</h1>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3">
+        <label class="form-label">Bạn là</label>
+        <select name="role" class="form-select">
+          <option value="patient" {{ 'selected' if request.form.get('role') == 'patient' }}>Bệnh nhân</option>
+          <option value="doctor" {{ 'selected' if request.form.get('role') == 'doctor' }}>Bác sĩ</option>
+          <option value="admin" {{ 'selected' if request.form.get('role') == 'admin' }}>Quản trị / Lễ tân</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email / tên đăng nhập</label>
+        <input name="login" class="form-control" value="{{ request.form.get('login', '') }}" autofocus required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mật khẩu</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button class="btn btn-primary w-100">Đăng nhập</button>
+      <div class="text-center mt-3 small">Chưa có tài khoản bệnh nhân? <a href="{{ url_for('auth.register') }}">Đăng ký</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

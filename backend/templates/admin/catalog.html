@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Phòng & chuyên khoa{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-6">
+    <h1 class="h5">Phòng khám</h1>
+    <form method="post" action="{{ url_for('admin.room_add') }}" class="row g-2 mb-3">{{ csrf() }}
+      <div class="col"><input name="room_code" class="form-control" placeholder="Mã phòng (vd: C301)" required></div>
+      <div class="col-3"><input type="number" name="floor" min="1" max="20" class="form-control" placeholder="Tầng" required></div>
+      <div class="col-auto"><button class="btn btn-primary">Thêm</button></div></form>
+    <table class="table table-sm bg-white"><thead><tr><th>#</th><th>Mã phòng</th><th>Tầng</th></tr></thead>
+      <tbody>{% for r in rooms %}<tr><td>{{ r.room_id }}</td><td>{{ r.room_code }}</td><td>{{ r.floor }}</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <div class="col-md-6">
+    <h1 class="h5">Chuyên khoa</h1>
+    <form method="post" action="{{ url_for('admin.specialty_add') }}" class="row g-2 mb-3">{{ csrf() }}
+      <div class="col"><input name="name" class="form-control" placeholder="Tên chuyên khoa" required></div>
+      <div class="col-auto"><button class="btn btn-primary">Thêm</button></div></form>
+    <table class="table table-sm bg-white"><thead><tr><th>#</th><th>Tên</th></tr></thead>
+      <tbody>{% for s in specialties %}<tr><td>{{ s.specialty_id }}</td><td>{{ s.name }}</td></tr>{% endfor %}</tbody></table>
+  </div>
+</div>
+{% endblock %}

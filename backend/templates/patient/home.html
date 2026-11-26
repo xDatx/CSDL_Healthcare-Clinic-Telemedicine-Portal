@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge with context %}
+{% block title %}Trang chủ{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Xin chào, {{ user.name }}</h1>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card card-stat"><div class="card-body">
+    <div class="text-muted">Lịch hẹn sắp tới</div><div class="display-6">{{ upcoming|length }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-stat"><div class="card-body">
+    <div class="text-muted">Tổng số lịch hẹn</div><div class="display-6">{{ total }}</div></div></div></div>
+  <div class="col-md-4 d-flex align-items-center"><a class="btn btn-primary btn-lg w-100" href="{{ url_for('patient.doctors') }}">Đặt lịch khám mới</a></div>
+</div>
+<div class="card"><div class="card-header">Lịch hẹn đang chờ / sắp diễn ra</div>
+<div class="table-responsive"><table class="table mb-0 align-middle">
+  <thead><tr><th>Thời gian</th><th>Bác sĩ</th><th>Hình thức</th><th>Phòng</th><th>Trạng thái</th></tr></thead>
+  <tbody>
+  {% for a in upcoming %}
+    <tr><td>{{ a.start_time|dmyhm }}</td><td>{{ a.doctor_name }}</td>
+        <td>{{ 'Trực tiếp' if a.appointment_type == 'IN_PERSON' else 'Từ xa' }}</td>
+        <td>{{ a.room_code or '—' }}</td><td>{{ badge(a.status) }}</td></tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-4">Bạn chưa có lịch hẹn nào đang chờ.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

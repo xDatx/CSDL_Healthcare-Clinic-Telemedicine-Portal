@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Secrets and local state (the backend has its own .gitignore too)
+.env
+backend/instance/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

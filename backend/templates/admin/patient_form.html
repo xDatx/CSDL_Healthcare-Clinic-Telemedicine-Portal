@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}{{ 'Thêm' if mode == 'new' else 'Sửa' }} bệnh nhân{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">{{ 'Thêm bệnh nhân' if mode == 'new' else 'Sửa bệnh nhân #' ~ p.patient_id }}</h1>
+<form method="post" class="card"><div class="card-body row g-3">
+  {{ csrf() }}
+  {{ field('Họ tên', 'full_name', p.full_name, required=True) }}
+  {{ field('Ngày sinh', 'dob', p.dob.isoformat() if p.dob else '', 'date', True) }}
+  {{ field('Số điện thoại', 'phone', p.phone) }}
+  {{ field('Email', 'email', p.email, 'email') }}
+  <div class="col-12"><label class="form-label">Địa chỉ</label><input name="address" class="form-control" value="{{ p.address or '' }}"></div>
+  <div class="col-12 small text-muted">Cần ít nhất số điện thoại hoặc email (ràng buộc CHECK của bảng patient).
+    {% if mode == 'new' %}Hệ thống sẽ tạo tài khoản đăng nhập và hiển thị mật khẩu tạm một lần.{% endif %}</div>
+  <div class="col-12"><button class="btn btn-primary">Lưu</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.patients') }}">Hủy</a></div>
+</div></form>
+{% endblock %}

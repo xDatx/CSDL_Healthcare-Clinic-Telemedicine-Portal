@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Lịch hẹn{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Lịch hẹn của tôi</h1>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3"><select name="scope" class="form-select">
+    {% for k, v in [('upcoming', 'Từ hôm nay trở đi'), ('past', 'Đã qua'), ('norecord', 'Đã khám, chưa có hồ sơ'), ('all', 'Tất cả')] %}
+      <option value="{{ k }}" {{ 'selected' if scope == k }}>{{ v }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><select name="status" class="form-select"><option value="">Mọi trạng thái</option>
+    {% for s in ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] %}
+      <option {{ 'selected' if status == s }}>{{ s }}</option>{% endfor %}</select></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Lọc</button></div>
+</form>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Thời gian</th><th>Bệnh nhân</th><th>Hình thức</th><th>Phòng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+  <tbody>
+  {% for a in appts %}
+    <tr>
+      <td>{{ a.appointment_id }}</td>
+      <td>{{ a.start_time|dmyhm }}–{{ a.end_time|hm }}</td>
+      <td>{{ a.patient_name }}</td>
+      <td>{{ 'Trực tiếp' if a.appointment_type == 'IN_PERSON' else 'Từ xa' }}</td>
+      <td>{{ a.room_code or '—' }}</td>
+      <td>{{ badge(a.status) }}</td>
+      <td>
+        <div class="d-flex gap-1 flex-wrap">
+        {% set nxt = {'PENDING': [('CONFIRMED', 'Xác nhận')], 'CONFIRMED': [('IN_PROGRESS', 'Bắt đầu khám')],
+                      'IN_PROGRESS': [('COMPLETED', 'Hoàn tất')]}.get(a.status, []) %}
+        {% for code, label in nxt %}
+          <form method="post" action="{{ url_for('doctor.set_status', appointment_id=a.appointment_id) }}">{{ csrf() }}
+            <input type="hidden" name="status" value="{{ code }}"><input type="hidden" name="next" value="{{ request.full_path }}">
+            <button class="btn btn-sm btn-primary">{{ label }}</button></form>
+        {% endfor %}
+        {% if a.status in ('PENDING', 'CONFIRMED') %}
+          <form method="post" action="{{ url_for('doctor.set_status', appointment_id=a.appointment_id) }}" onsubmit="return confirm('Hủy lịch hẹn này?')">{{ csrf() }}
+            <input type="hidden" name="status" value="CANCELLED"><input type="hidden" name="next" value="{{ request.full_path }}">
+            <button class="btn btn-sm btn-outline-danger">Hủy</button></form>
+        {% endif %}
+        {% if a.status == 'COMPLETED' %}
+          {% if a.record_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('doctor.record', record_id=a.record_id) }}">Xem hồ sơ</a>
+          {% else %}<a class="btn btn-sm btn-success" href="{{ url_for('doctor.record_new', appointment_id=a.appointment_id) }}">Lập hồ sơ</a>{% endif %}
+        {% endif %}
+        </div>
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">Không có lịch hẹn.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

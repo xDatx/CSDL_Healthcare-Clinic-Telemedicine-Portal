@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}{{ 'Lập hồ sơ' if mode == 'new' else 'Sửa hồ sơ' }}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">{{ 'Lập hồ sơ bệnh án' if mode == 'new' else 'Sửa hồ sơ bệnh án #' ~ record_id }}</h1>
+<p class="text-muted">Bệnh nhân: <b>{{ appt.patient_name }}</b> · Ngày khám: {{ appt.appointment_date|dmy }} · Lịch hẹn #{{ appt.appointment_id }}</p>
+
+<form method="post">
+  {{ csrf() }}
+  <div class="card mb-3"><div class="card-header">Dấu hiệu sinh tồn</div><div class="card-body row g-3">
+    <div class="col-md-2"><label class="form-label">Tâm thu (mmHg)</label><input type="number" name="systolic_bp" class="form-control" min="60" max="250" value="{{ form.get('systolic_bp') or '' }}"></div>
+    <div class="col-md-2"><label class="form-label">Tâm trương</label><input type="number" name="diastolic_bp" class="form-control" min="30" max="150" value="{{ form.get('diastolic_bp') or '' }}"></div>
+    <div class="col-md-2"><label class="form-label">Nhịp tim (bpm)</label><input type="number" name="heart_rate" class="form-control" min="20" max="250" value="{{ form.get('heart_rate') or '' }}"></div>
+    <div class="col-md-3"><label class="form-label">Nhiệt độ (°C)</label><input type="number" step="0.1" name="temperature_c" class="form-control" min="30" max="45" value="{{ form.get('temperature_c') or '' }}"></div>
+    <div class="col-md-3"><label class="form-label">SpO₂ (%)</label><input type="number" name="oxygen_saturation" class="form-control" min="50" max="100" value="{{ form.get('oxygen_saturation') or '' }}"></div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-header">Khám &amp; chẩn đoán</div><div class="card-body row g-3">
+    <div class="col-12"><label class="form-label">Chẩn đoán <span class="text-danger">*</span></label><textarea name="diagnosis" class="form-control" rows="2" required>{{ form.get('diagnosis') or '' }}</textarea></div>
+    <div class="col-md-6"><label class="form-label">Triệu chứng</label><textarea name="symptoms" class="form-control" rows="3">{{ form.get('symptoms') or '' }}</textarea></div>
+    <div class="col-md-6"><label class="form-label">Ghi chú</label><textarea name="notes" class="form-control" rows="3">{{ form.get('notes') or '' }}</textarea></div>
+  </div></div>
+
+  {% if mode == 'new' %}
+  <div class="card mb-3"><div class="card-header d-flex justify-content-between align-items-center">
+    <span>Đơn thuốc (tùy chọn)</span><button type="button" class="btn btn-sm btn-outline-primary" id="add-row">+ Thêm thuốc</button></div>
+    <div class="card-body" id="rows">
+      {% for r in rows %}
+      <div class="row g-2 mb-2 rx-row">
+        <div class="col-md-4"><select name="medication_id" class="form-select"><option value="">— chọn thuốc —</option>
+          {% for m in meds %}<option value="{{ m.medication_id }}" {{ 'selected' if r.get('medication_id')|string == m.medication_id|string }}>{{ m.name }} ({{ m.unit }})</option>{% endfor %}</select></div>
+        <div class="col-md-1"><input type="number" name="quantity" min="1" class="form-control" placeholder="SL" value="{{ r.get('quantity') or '' }}"></div>
+        <div class="col-md-3"><input name="dosage" class="form-control" placeholder="Liều dùng (vd: 1 viên)" value="{{ r.get('dosage') or '' }}"></div>
+        <div class="col-md-2"><input name="frequency" class="form-control" placeholder="Tần suất" value="{{ r.get('frequency') or '' }}"></div>
+        <div class="col-md-1"><input type="number" name="duration_days" min="1" class="form-control" placeholder="Ngày" value="{{ r.get('duration_days') or '' }}"></div>
+        <div class="col-md-1"><button type="button" class="btn btn-outline-danger w-100 rm-row">×</button></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted small">Đơn thuốc không sửa được sau khi lập. Mọi thay đổi hồ sơ đều được ghi vào nhật ký (NFR-04).</p>
+  {% endif %}
+
+  <button class="btn btn-primary">Lưu</button>
+  <a class="btn btn-outline-secondary" href="{{ url_for('doctor.appointments') }}">Hủy</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{% if mode == 'new' %}
+<script>
+  const box = document.getElementById('rows');
+  document.getElementById('add-row').addEventListener('click', () => {
+    const clone = box.querySelector('.rx-row').cloneNode(true);
+    clone.querySelectorAll('input').forEach(i => i.value = '');
+    clone.querySelector('select').selectedIndex = 0;
+    box.appendChild(clone);
+  });
+  box.addEventListener('click', e => {
+    if (e.target.classList.contains('rm-row') && box.querySelectorAll('.rx-row').length > 1) e.target.closest('.rx-row').remove();
+  });
+</script>
+{% endif %}
+{% endblock %}

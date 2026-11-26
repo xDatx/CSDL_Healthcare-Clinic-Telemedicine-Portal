@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Lịch hẹn của tôi{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Lịch hẹn của tôi</h1>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Thời gian</th><th>Bác sĩ</th><th>Hình thức</th><th>Phòng</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for a in appts %}
+    <tr>
+      <td>{{ a.appointment_id }}</td>
+      <td>{{ a.start_time|dmyhm }} – {{ a.end_time|hm }}</td>
+      <td>{{ a.doctor_name }} <span class="text-muted small">({{ 'GP' if a.spec_type == 'GP' else 'Chuyên khoa' }})</span></td>
+      <td>{{ 'Trực tiếp' if a.appointment_type == 'IN_PERSON' else 'Từ xa' }}</td>
+      <td>{{ a.room_code or '—' }}</td>
+      <td>{{ badge(a.status) }}</td>
+      <td class="text-end">
+        {% if a.status in ('PENDING', 'CONFIRMED') %}
+        <form method="post" action="{{ url_for('patient.cancel', appointment_id=a.appointment_id) }}"
+              onsubmit="return confirm('Hủy lịch hẹn này?')">{{ csrf() }}
+          <button class="btn btn-sm btn-outline-danger">Hủy</button></form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">Bạn chưa có lịch hẹn nào.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

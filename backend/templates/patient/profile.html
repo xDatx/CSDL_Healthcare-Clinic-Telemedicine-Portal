@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Hồ sơ cá nhân{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Hồ sơ cá nhân</h1>
+<form method="post" class="card"><div class="card-body row g-3">
+  {{ csrf() }}
+  {{ field('Họ tên', 'full_name', p.full_name, required=True) }}
+  {{ field('Ngày sinh', 'dob', p.dob.isoformat() if p.dob else '', 'date', True) }}
+  {{ field('Số điện thoại', 'phone', p.phone) }}
+  {{ field('Email liên hệ', 'email', p.email, 'email') }}
+  <div class="col-12"><label class="form-label">Địa chỉ</label>
+    <input name="address" class="form-control" value="{{ p.address or '' }}"></div>
+  <div class="col-12 small text-muted">Cần ít nhất số điện thoại hoặc email (BR-00). Tên đăng nhập không đổi khi bạn sửa email.
+    Hồ sơ tạo ngày {{ p.created_at|dmy }}.</div>
+  <div class="col-12"><button class="btn btn-primary">Lưu thay đổi</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient.home') }}">Hủy</a></div>
+</div></form>
+{% endblock %}

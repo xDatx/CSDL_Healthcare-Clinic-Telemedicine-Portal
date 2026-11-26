@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Phân quyền{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Nhân sự quản trị &amp; phân quyền <span class="text-muted small">(BR-20)</span></h1>
+<div class="table-responsive"><table class="table align-middle bg-white">
+  <thead><tr><th>#</th><th>Họ tên</th><th>Vai trò</th><th>Quyền đang có</th><th>Cấp thêm</th></tr></thead>
+  <tbody>
+  {% for s in staff %}
+    <tr><td>{{ s.admin_id }}</td><td>{{ s.full_name }}<div class="small text-muted">{{ s.email }}</div></td><td>{{ s.role }}</td>
+      <td>{% for g in grants.get(s.admin_id, []) %}<span class="badge text-bg-info me-1" title="Cấp bởi {{ g.granted_by_name }}, {{ g.granted_at|dmyhm }}">{{ g.permission_code }}</span>{% else %}<span class="text-muted">—</span>{% endfor %}</td>
+      <td>{% if 'ASSIGN_PERMISSION' in perms %}
+        <form method="post" action="{{ url_for('admin.permission_grant') }}" class="d-flex gap-1">{{ csrf() }}
+          <input type="hidden" name="admin_id" value="{{ s.admin_id }}">
+          <select name="permission_code" class="form-select form-select-sm" style="width:12rem">{% for c in codes %}<option>{{ c }}</option>{% endfor %}</select>
+          <button class="btn btn-sm btn-outline-primary">Cấp</button></form>{% endif %}</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+
+{% if 'ASSIGN_PERMISSION' in perms %}
+<div class="card mt-4"><div class="card-header">Thêm nhân sự quản trị</div><div class="card-body">
+  <form method="post" action="{{ url_for('admin.staff_add') }}" class="row g-2">{{ csrf() }}
+    <div class="col-md-3"><input name="full_name" class="form-control" placeholder="Họ tên" required></div>
+    <div class="col-md-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
+    <div class="col-md-3"><select name="role" class="form-select"><option>RECEPTIONIST</option><option>SYSTEM_ADMIN</option></select></div>
+    <div class="col-auto"><button class="btn btn-primary">Thêm</button></div>
+  </form></div></div>
+{% endif %}
+<p class="small text-muted mt-3">Quyền không bị thu hồi bằng DELETE (r_admin chỉ có SELECT, INSERT). Trigger chỉ cho SYSTEM_ADMIN đang nắm quyền đó cấp tiếp.</p>
+{% endblock %}

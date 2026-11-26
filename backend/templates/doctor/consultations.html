@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge with context %}
+{% block title %}Hội chẩn{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Hội chẩn</h1>
+{% macro table(rows, who_label, who_key) %}
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Hồ sơ</th><th>{{ who_label }}</th><th>Gửi lúc</th><th>Hết hạn truy cập</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for c in rows %}
+    <tr><td>{{ c.request_id }}</td><td>#{{ c.record_id }}</td><td>{{ c[who_key] }}</td>
+        <td>{{ c.requested_at|dmyhm }}</td><td>{{ c.expires_at|dmyhm or '—' }}</td><td>{{ badge(c.status) }}</td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('doctor.consultation', request_id=c.request_id) }}">Chi tiết</a></td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-3">Không có yêu cầu.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endmacro %}
+<h2 class="h6 text-uppercase text-muted">Tôi được mời</h2>
+{{ table(incoming, 'Bác sĩ điều trị', 'requesting_doctor_name') }}
+<h2 class="h6 text-uppercase text-muted mt-4">Tôi đã gửi</h2>
+{{ table(outgoing, 'Bác sĩ được mời', 'consulting_doctor_name') }}
+{% endblock %}

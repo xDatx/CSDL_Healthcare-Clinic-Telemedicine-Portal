@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, csrf with context %}
+{% block title %}Tổng quan bác sĩ{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Xin chào, {{ user.name }}</h1>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card card-stat"><div class="card-body"><div class="text-muted">Lịch hẹn hôm nay</div><div class="display-6">{{ today|length }}</div></div></div></div>
+  <div class="col-md-4"><div class="card card-stat"><div class="card-body"><div class="text-muted">Đã khám, chưa có hồ sơ</div>
+    <div class="display-6">{{ to_record }}</div>
+    {% if to_record %}<a href="{{ url_for('doctor.appointments', scope='norecord') }}" class="small">Xem danh sách</a>{% endif %}</div></div></div>
+  <div class="col-md-4"><div class="card card-stat"><div class="card-body"><div class="text-muted">Yêu cầu hội chẩn đang chờ</div>
+    <div class="display-6">{{ incoming|length }}</div>
+    {% if incoming %}<a href="{{ url_for('doctor.consultations') }}" class="small">Xử lý ngay</a>{% endif %}</div></div></div>
+</div>
+<div class="card"><div class="card-header">Lịch hẹn hôm nay</div>
+<div class="table-responsive"><table class="table mb-0 align-middle">
+  <thead><tr><th>Giờ</th><th>Bệnh nhân</th><th>Hình thức</th><th>Phòng</th><th>Trạng thái</th></tr></thead>
+  <tbody>
+  {% for a in today %}
+    <tr><td>{{ a.start_time|hm }}–{{ a.end_time|hm }}</td><td>{{ a.patient_name }}</td>
+        <td>{{ 'Trực tiếp' if a.appointment_type == 'IN_PERSON' else 'Từ xa' }}</td><td>{{ a.room_code or '—' }}</td><td>{{ badge(a.status) }}</td></tr>
+  {% else %}<tr><td colspan="5" class="text-center text-muted py-4">Hôm nay không có lịch hẹn.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Bác sĩ{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Bác sĩ</h1>
+  {% if 'CREATE_DOCTOR' in perms %}<a class="btn btn-primary" href="{{ url_for('admin.doctor_new') }}">+ Thêm bác sĩ</a>{% endif %}
+</div>
+<div class="table-responsive"><table class="table table-hover align-middle bg-white">
+  <thead><tr><th>#</th><th>Họ tên</th><th>Email</th><th>Giấy phép</th><th>Hợp đồng</th><th>Loại</th><th>Chuyên khoa</th><th>Trạng thái</th><th></th></tr></thead>
+  <tbody>
+  {% for d in doctors %}
+    <tr class="{{ '' if d.is_active else 'text-muted' }}">
+      <td>{{ d.doctor_id }}</td><td>{{ d.full_name }}</td><td>{{ d.email }}</td><td>{{ d.license_no }}</td>
+      <td>{{ 'Full-time' if d.employment_type == 'FULL_TIME' else 'Part-time' }}</td>
+      <td>{{ 'Đa khoa' if d.spec_type == 'GP' else 'Chuyên khoa' }}</td>
+      <td>{{ d.specialty or '—' }}{% if d.years_practice is not none %} <span class="small">({{ d.years_practice }} năm)</span>{% endif %}</td>
+      <td><span class="badge text-bg-{{ 'success' if d.is_active else 'secondary' }}">{{ 'Hoạt động' if d.is_active else 'Ngừng' }}</span></td>
+      <td class="text-end">{% if 'CREATE_DOCTOR' in perms %}
+        <div class="d-inline-flex gap-1">
+          <form method="post" action="{{ url_for('admin.doctor_toggle', doctor_id=d.doctor_id) }}">{{ csrf() }}
+            <button class="btn btn-sm btn-outline-{{ 'danger' if d.is_active else 'success' }}">{{ 'Ngừng' if d.is_active else 'Kích hoạt' }}</button></form>
+          <form method="post" action="{{ url_for('admin.doctor_account', doctor_id=d.doctor_id) }}" onsubmit="return confirm('Cấp / đặt lại mật khẩu cho bác sĩ này?')">{{ csrf() }}
+            <button class="btn btn-sm btn-outline-warning">Tài khoản</button></form>
+        </div>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody></table></div>
+{% endblock %}
