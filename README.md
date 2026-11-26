@@ -37,15 +37,15 @@ The biggest piece is case-based access control on medical records - a doctor can
 ### Phase 3 - Implementation & Queries
 - [x] DDL: 17 tables, composite PK / FK, CHECK constraints, 7 indexes
 - [x] 25 triggers + shared validation procedures (BR-01, 03, 05, 08, 09, 11, 12, 19, 20, 22-26, NFR-04)
-- [x] `sp_read_medical_record` / `sp_patient_history`: authorised and audited access to clinical data (NFR-02, NFR-04)
-- [x] 6 views (availability, appointment detail, active consultations, part-time pay, medication catalog, internal history)
+- [x] `sp_read_medical_record` / `sp_patient_history` + workflow routines (`sp_book_appointment`, `sp_cancel_appointment`, `sp_patient_appointments`, `sp_list_my_consultations`, `sp_get_consultation`): authorised and audited access under RBAC (NFR-02, NFR-04)
+- [x] 7 views (availability, appointment detail, active consultations, part-time pay, medication catalog, active doctor directory, internal history)
 - [x] 16 queries (joins, subqueries, aggregates, CTE, recursive CTE, window functions, ROLLUP)
 - [x] Seed data: small hand-written set + bulk set (50 active doctors, 10,021 patients, 19,726 appointments)
 - [x] RBAC: 3 roles, least privilege, no direct access to clinical tables
-- [x] 60 automated test cases, all PASS ([traceability matrix](docs/traceability_matrix.md))
+- [x] 67 automated test cases, all PASS ([traceability matrix](docs/traceability_matrix.md))
 - [x] Performance evidence with before/after plans ([docs/performance.md](docs/performance.md))
-- [ ] Update the report (`database_project_report.docx`) so that column names and the audit design match the DDL
-- [ ] Encryption of clinical data at rest (NFR-04, AES-256)
+- [x] Update the report (`database_project_report.docx`) so that column names, EER mapping, and the audit design match the DDL
+- [x] Document NFR-04 clinical encryption at rest (`ALTER TABLE ... ENCRYPTION = 'Y'` storage-level TDE at deployment time; see [`docs/traceability_matrix.md`](docs/traceability_matrix.md))
 
 ### Phase 4 - Integration & Defense
 - [ ] Backend integration (authenticated user id passed to the access procedures)
@@ -77,7 +77,7 @@ Needs MySQL 8.0.18+.
 cd sql
 mysql -u root -p --default-character-set=utf8mb4 -e "source run_all.sql"     # build schema, triggers, views, seed, RBAC
 cd ..
-mysql -u root -p --default-character-set=utf8mb4 healthcare < tests/run_all_tests.sql   # expect 60 / 60 PASS
+mysql -u root -p --default-character-set=utf8mb4 healthcare < tests/run_all_tests.sql   # expect 67 / 67 PASS
 ```
 
 See [`README_SQL.md`](README_SQL.md) for DBeaver, the bulk data set and the performance scripts.
