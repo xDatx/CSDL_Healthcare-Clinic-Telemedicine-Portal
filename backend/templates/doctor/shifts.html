@@ -18,7 +18,7 @@
     {% endif %}
     {% if prof.employment_type != 'FULL_TIME' %}
     <div class="col-md-2"><label class="form-label">Đơn giá / giờ {% if prof.employment_type == 'PART_TIME' %}<span class="text-danger">*</span>{% endif %}</label>
-      <input type="number" name="rate_per_hour" min="1" step="1000" class="form-control"></div>
+      <input type="number" name="rate_per_hour" min="1" step="any" class="form-control"></div>
     {% endif %}
     <div class="col-12"><button class="btn btn-primary">Đăng ký ca</button>
       <span class="text-muted small ms-2">Bác sĩ đa khoa (GP) cần phòng; bác sĩ chuyên khoa không có phòng; part-time cần đơn giá (BR-03, BR-24, BR-26).</span></div>
