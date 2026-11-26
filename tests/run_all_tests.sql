@@ -215,6 +215,25 @@ CALL tc_assert('TC-59','NFR-04','Refused read wrote 0 audit rows, allowed read w
 CALL tc_expect_error('TC-60','CHECK','A patient needs a phone or an email','ck_patient_contact',
   "INSERT INTO patient (full_name,dob) VALUES ('No Contact','1990-01-01')");
 
+-- ======================= Workflow & RBAC procedures (TC-61..67) =======================
+CALL tc_expect_error('TC-61','BR-22','Unrelated doctor cannot read a consultation request','BR-22: access denied',
+  "CALL sp_get_consultation(1, 5)");
+CALL tc_expect_ok('TC-62','BR-22','Invited consulting doctor can read reason and opinion',
+  "CALL sp_get_consultation(1, 9)");
+CALL tc_expect_error('TC-63','NFR-02','Patient cannot cancel another patient''s appointment','NFR-02: cannot cancel',
+  "CALL sp_cancel_appointment(2, 41)");
+CALL tc_expect_error('TC-64','BR-11','Patient cannot cancel a COMPLETED appointment','BR-11: invalid status transition',
+  "CALL sp_cancel_appointment(1, 1)");
+CALL tc_expect_ok('TC-65','BR-11','Patient can cancel own PENDING/CONFIRMED appointment',
+  "CALL sp_cancel_appointment(4, 41)");
+
+SELECT COUNT(*) INTO @pa_before FROM medical_record_audit_log;
+CALL tc_expect_ok('TC-66','NFR-04','sp_patient_appointments lists visits without writing audit rows',
+  "CALL sp_patient_appointments(1)");
+SELECT COUNT(*) INTO @pa_after FROM medical_record_audit_log;
+CALL tc_assert('TC-67','NFR-04','sp_patient_appointments wrote 0 audit rows',
+  @pa_after = @pa_before);
+
 ROLLBACK;
 
 SELECT tc, rule_id, description, outcome, IF(outcome = 'PASS', '', detail) AS detail FROM tc_results ORDER BY seq;
