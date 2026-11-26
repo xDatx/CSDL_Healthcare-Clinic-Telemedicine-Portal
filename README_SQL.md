@@ -1,5 +1,7 @@
 # Hướng dẫn chạy SQL (MySQL 8.0.18+)
 
+Phần ứng dụng web (Flask) nằm ở [`backend/README.md`](backend/README.md); tài liệu này chỉ nói về cơ sở dữ liệu.
+
 ## Yêu cầu
 
 - MySQL Server **8.0.18 trở lên** (`SELECT VERSION();` để kiểm tra).
@@ -15,14 +17,16 @@ sql/
   00_init.sql                  DROP + CREATE database healthcare
   ddl/01..10_*.sql             17 bảng
   02_indexes.sql               7 index (NFR-01 / NFR-03)
-  triggers/                    25 trigger + procedure kiểm tra dùng chung
-  procedures/sp_read_medical_record.sql   fn_can_read_record, sp_read_medical_record,
-                                          sp_patient_history, sp_book_appointment,
-                                          sp_cancel_appointment, sp_patient_appointments,
-                                          sp_list_my_consultations, sp_get_consultation
+  triggers/                    25 trigger + 5 procedure kiểm tra dùng chung
+  procedures/
+    sp_read_medical_record.sql    fn_can_read_record, sp_read_medical_record, sp_patient_history,
+                                  sp_book_appointment, sp_cancel_appointment, sp_patient_appointments,
+                                  sp_list_my_consultations, sp_get_consultation
+    sp_patient_self_service.sql   sp_register_patient, sp_get_my_profile, sp_update_my_profile (FR-01)
   views/v_views.sql            7 view
   05_seed_data.sql             dữ liệu mẫu (đi qua toàn bộ trigger)
   07_rbac.sql                  3 role + 3 tài khoản ứng dụng
+  08_phase4_patch.sql          nâng cấp một database CÓ SẴN lên Phase 4 (không xóa gì); build mới không cần
   99_teardown.sql              xóa database, user, role
   queries/                     16 truy vấn (Q01..Q16)
 seed/
@@ -33,10 +37,15 @@ tests/
   run_all_tests.sql            67 test tự động (TC-01..TC-67)
   performance_explain.sql      kế hoạch thực thi các truy vấn chính
   performance_before_after.sql so sánh có / không có index
+backend/                       ứng dụng Flask, 76 test pytest (xem backend/README.md)
 docs/
   performance.md               số liệu đo được
   traceability_matrix.md       quy tắc nghiệp vụ -> cài đặt -> test
+  demo_scenarios.md            7 kịch bản demo + phương án dự phòng
+  defense_prep.md              chuẩn bị bảo vệ
 ```
+
+Tổng cộng: 17 bảng, 25 trigger, 7 view, 15 procedure và 1 function.
 
 ## Cách chạy
 
@@ -62,11 +71,23 @@ DBeaver không hỗ trợ `SOURCE`. Mở từng file và chạy bằng **Alt+X**
 3. `sql/02_indexes.sql`
 4. `sql/triggers/trg_doctor_module.sql`, `trg_appointment_audit.sql`, `trg_medication_consultation.sql`
 5. `sql/procedures/sp_read_medical_record.sql`
-6. `sql/views/v_views.sql`
-7. `sql/05_seed_data.sql`
-8. `sql/07_rbac.sql`
+6. `sql/procedures/sp_patient_self_service.sql`
+7. `sql/views/v_views.sql`
+8. `sql/05_seed_data.sql`
+9. `sql/07_rbac.sql`
 
 File có `DELIMITER` (trigger, procedure, test) cần chạy bằng **Execute SQL Script**, không dùng Ctrl+Enter.
+
+### Nâng cấp database đã có (không xóa dữ liệu)
+
+Nếu database `healthcare` đã được dựng từ bản Phase 3 và bạn không muốn dựng lại:
+
+```bash
+cd sql
+mysql -u root -p --default-character-set=utf8mb4 healthcare < 08_phase4_patch.sql
+```
+
+Patch thêm 3 procedure self-service (FR-01) và quyền đọc `room` cho role bác sĩ.
 
 ### Dữ liệu lớn và đo hiệu năng (tùy chọn)
 
@@ -90,15 +111,19 @@ Các file seed chạy lại nhiều lần không tạo trùng. Hồ sơ bệnh �
   hai thủ tục này kiểm tra quyền (BR-20/21/22, NFR-02) rồi ghi audit (NFR-04).
 - Trước khi ghi, ứng dụng đặt ngữ cảnh audit: `SET @app_actor_type = 'DOCTOR'; SET @app_actor_id = <id>;`
   (với danh mục thuốc: `SET @app_actor_id = <admin_id>;`).
-- MySQL không biết người dùng cuối đứng sau một kết nối chung, nên backend (Phase 4) phải truyền đúng id của người
-  đã đăng nhập vào các thủ tục. Đây là giới hạn đã biết, ghi trong `docs/traceability_matrix.md`.
+- MySQL không biết người dùng cuối đứng sau một kết nối chung. Backend (Phase 4) lấy id từ **session đã đăng nhập**
+  và truyền vào các thủ tục, không bao giờ lấy từ dữ liệu người dùng gửi lên. Nếu gọi thủ tục trực tiếp bằng tài khoản
+  `app_patient` với id của người khác thì MySQL không chặn được; giới hạn này ghi trong `docs/traceability_matrix.md`.
 - Mật khẩu trong `07_rbac.sql` chỉ để demo, phải đổi trước khi dùng thật.
+- Mã hóa dữ liệu lâm sàng khi lưu (NFR-04) là cấu hình khi triển khai (`ALTER TABLE ... ENCRYPTION = 'Y'`),
+  không nằm trong script này.
 
 ## Lỗi thường gặp
 
 | Hiện tượng | Nguyên nhân / cách xử lý |
 |---|---|
-| `Error 3823` khi tạo bảng | Cột nằm trong `CHECK` và trong FK có `ON UPDATE CASCADE`. Schema này dùng `ON UPDATE RESTRICT` ở các FK đó. |
+| `Error 3823` khi tạo bảng | Cột nằm trong `CHECK` và trong FK có `ON UPDATE CASCADE`. Schema này dùng `ON UPDATE RESTRICT` (mặc định) ở các FK đó. |
 | Các test CHECK (TC-09, TC-21, TC-28, TC-40, TC-60) không bắt được lỗi | MySQL dưới 8.0.16 không enforce `CHECK`. |
 | `BR-25: set @app_actor_id ...` | Chưa đặt `@app_actor_id` (một admin đang hoạt động) trước khi sửa bảng `medication`. |
 | `NFR-04: actor must be ...` | `@app_actor_type` đặt khác `PATIENT` / `DOCTOR` / `ADMIN`, hoặc thiếu `@app_actor_id`. Để trống cả hai thì audit ghi nhận bác sĩ điều trị. |
+| Web báo `Access denied` / `command denied` | Chưa chạy `07_rbac.sql` (hoặc `08_phase4_patch.sql` trên DB cũ), hoặc mật khẩu trong `backend/.env` khác `07_rbac.sql`. |

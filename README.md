@@ -48,9 +48,9 @@ The biggest piece is case-based access control on medical records - a doctor can
 - [x] Document NFR-04 clinical encryption at rest (`ALTER TABLE ... ENCRYPTION = 'Y'` storage-level TDE at deployment time; see [`docs/traceability_matrix.md`](docs/traceability_matrix.md))
 
 ### Phase 4 - Integration & Defense
-- [ ] Backend integration (authenticated user id passed to the access procedures)
-- [ ] Live demo scenarios
-- [ ] Defense preparation
+- [x] Backend integration: Flask + PyMySQL, 3 portals on 3 least-privilege MySQL accounts, authenticated id passed to the access procedures, FR-01 patient self-service ([backend/README.md](backend/README.md))
+- [x] Live demo scenarios ([docs/demo_scenarios.md](docs/demo_scenarios.md), 7 scenarios + fallback plan)
+- [x] Defense preparation ([docs/defense_prep.md](docs/defense_prep.md): outline, Q&A, known limits, pre-defense checklist)
 
 ## Timeline (12 weeks)
 
@@ -66,18 +66,40 @@ The biggest piece is case-based access control on medical records - a doctor can
 Full report lives in `/docs`, following the course template, based on ISO/IEC/IEEE 29148 (requirements) and ISO/IEC 11179 (data dictionary).
 
 - SQL guide (Vietnamese): [`README_SQL.md`](README_SQL.md)
+- Backend guide, security model and route map: [`backend/README.md`](backend/README.md)
 - Traceability matrix: [`docs/traceability_matrix.md`](docs/traceability_matrix.md)
 - Performance evidence: [`docs/performance.md`](docs/performance.md)
+- Demo scenarios: [`docs/demo_scenarios.md`](docs/demo_scenarios.md)
+- Defense preparation: [`docs/defense_prep.md`](docs/defense_prep.md)
+
+## Repository layout
+
+```text
+sql/        DDL, indexes, triggers, procedures, views, seed, RBAC, queries
+seed/       bulk data for the performance evidence
+tests/      SQL test suite (67 tests) and performance scripts
+backend/    Flask web application (3 portals) + 76 pytest tests
+docs/       report PDF, EER / physical diagrams, traceability, performance, demo, defense
+```
 
 ## Quick start
 
-Needs MySQL 8.0.18+.
+Needs MySQL 8.0.18+ and, for the web app, Python 3.11+.
 
 ```bash
+# 1. database
 cd sql
-mysql -u root -p --default-character-set=utf8mb4 -e "source run_all.sql"     # build schema, triggers, views, seed, RBAC
+mysql -u root -p --default-character-set=utf8mb4 -e "source run_all.sql"     # schema, triggers, views, seed, RBAC
 cd ..
 mysql -u root -p --default-character-set=utf8mb4 healthcare < tests/run_all_tests.sql   # expect 67 / 67 PASS
+
+# 2. web application
+cd backend
+pip install -r requirements.txt
+copy .env.example .env            # then set SECRET_KEY (cp on Linux/macOS)
+python manage.py seed-accounts    # demo logins, password Demo#2026
+python app.py                     # http://127.0.0.1:5000
+python -m pytest -q               # expect 76 passed
 ```
 
-See [`README_SQL.md`](README_SQL.md) for DBeaver, the bulk data set and the performance scripts.
+See [`README_SQL.md`](README_SQL.md) for DBeaver, upgrading an existing database, the bulk data set and the performance scripts.
