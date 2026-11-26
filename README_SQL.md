@@ -17,8 +17,10 @@ sql/
   02_indexes.sql               7 index (NFR-01 / NFR-03)
   triggers/                    25 trigger + procedure kiểm tra dùng chung
   procedures/sp_read_medical_record.sql   fn_can_read_record, sp_read_medical_record,
-                                          sp_patient_history, sp_book_appointment
-  views/v_views.sql            6 view
+                                          sp_patient_history, sp_book_appointment,
+                                          sp_cancel_appointment, sp_patient_appointments,
+                                          sp_list_my_consultations, sp_get_consultation
+  views/v_views.sql            7 view
   05_seed_data.sql             dữ liệu mẫu (đi qua toàn bộ trigger)
   07_rbac.sql                  3 role + 3 tài khoản ứng dụng
   99_teardown.sql              xóa database, user, role
@@ -28,7 +30,7 @@ seed/
   seed_bulk_medications.sql    500 thuốc
   seed_bulk_activity.sql       41 bác sĩ, ca trực, ~19.700 lịch hẹn, hồ sơ, đơn thuốc
 tests/
-  run_all_tests.sql            60 test tự động (TC-01..TC-60)
+  run_all_tests.sql            67 test tự động (TC-01..TC-67)
   performance_explain.sql      kế hoạch thực thi các truy vấn chính
   performance_before_after.sql so sánh có / không có index
 docs/
@@ -47,7 +49,7 @@ cd ..
 mysql -u root -p --default-character-set=utf8mb4 healthcare < tests/run_all_tests.sql
 ```
 
-Kết quả mong đợi của bộ test: `total_tests = 60, passed = 60, failed = 0`.
+Kết quả mong đợi của bộ test: `total_tests = 67, passed = 67, failed = 0`.
 
 > **Cảnh báo:** `00_init.sql` xóa và tạo lại database `healthcare`.
 
